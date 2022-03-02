@@ -23,7 +23,7 @@ namespace WebAPI.Controllers
 
         [HttpGet("getall")]
         //[Authorize(Roles = "Admin")] // Admin editor gibide verebiliriz.
-        [Authorize(Roles = "Product.List")] // Ürün listeliyebilme yetkisi profesyonellik için -> Authorize ı backend de yazılabilir. -> 41.ders 7:00
+        //[Authorize(Roles = "Product.List")] // Ürün listeliyebilme yetkisi profesyonellik için -> Authorize ı backend de yazılabilir. -> 41.ders 7:00
         public IActionResult GetList()
         {
             var result = _productService.GetList();

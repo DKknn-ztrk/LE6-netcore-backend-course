@@ -1,13 +1,14 @@
 ﻿using Castle.DynamicProxy;
+using System;
 
 namespace Core.Utilities.Interceptors
 {
     public abstract class MethodInterception:MethodInterceptionBaseAttribute
     {
-        protected virtual void OnBefore(IInvocation ınvocation) { } //OnBefore - Metodun önünde yani metod Çalışmadan Önce sen çalış
-        protected virtual void OnAfter(IInvocation ınvocation) { } //OnAfter - Metodun sonunda yani metod çalıştıktan sonra sen çalış
-        protected virtual void OnException(IInvocation ınvocation) { } //OnException - Metod hata verdiğinde sen çalış
-        protected virtual void OnSuccess(IInvocation ınvocation) { } //OnSuccess - Metod başarılı ise sen çalış
+        protected virtual void OnBefore(IInvocation invocation) { } //OnBefore - Metodun önünde yani metod Çalışmadan Önce sen çalış
+        protected virtual void OnAfter(IInvocation invocation) { } //OnAfter - Metodun sonunda yani metod çalıştıktan sonra sen çalış
+        protected virtual void OnException(IInvocation invocation, System.Exception e) { } //OnException - Metod hata verdiğinde sen çalış
+        protected virtual void OnSuccess(IInvocation invocation) { } //OnSuccess - Metod başarılı ise sen çalış
 
         public override void Intercept(IInvocation invocation)
         {
@@ -17,10 +18,10 @@ namespace Core.Utilities.Interceptors
             {
                 invocation.Proceed();
             }
-            catch (System.Exception)
+            catch (Exception e)
             {
                 isSuccess = false;
-                OnException(invocation);
+                OnException(invocation,e);
                 throw;
             }
             finally

@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace Business.Constants
 {
     public static class Messages
     {
+        
         public static string ProductAdded = "Product succesfully has been added";
+
+
         public static string ProductDeleted = "Product succesfully has been deleted";
         public static string ProductUpdated = "Product succesfully has been updated";
 
@@ -21,14 +25,11 @@ namespace Business.Constants
         public static string UserRegistered = "User successfully has been registered";
         public static string AccessTokenCreated = "Access Token successfully has been created";
 
+        public static string AuthorizationDenied = "You have no authority";
+
+        public static string ProductNameAlreadyExists = "Product name already exists";
+        public static string CheckIfCategoryIsEnabled = "Category Is Enabled";
+
         
-
-
-
-
-
-
-
-
     }
 }

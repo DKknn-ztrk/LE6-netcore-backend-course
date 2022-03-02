@@ -21,9 +21,9 @@ namespace Core.Aspects.Autofac.Caching
             _cacheManager = ServiceTool.ServiceProvider.GetService<ICacheManager>();
         }
 
-        protected override void OnSuccess(IInvocation ınvocation)// başarılı işlemlerde like add, update gibi cache in yenilenmesi gerekiyor 
+        protected override void OnSuccess(IInvocation invocation)// başarılı işlemlerde like add, update gibi cache in yenilenmesi gerekiyor 
         {
-            _cacheManager.RemoveByPattern(_pattern); // tutulan cache i sil ve yeni cache i al işleme
+            _cacheManager.RemoveByPattern(_pattern); // tutulan cache i sil ve yeni cache i işleme al
         }
     }
 }

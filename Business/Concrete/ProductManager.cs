@@ -1,28 +1,41 @@
 ﻿using Business.Abstract;
+using Business.BusinessAspects.Autofac;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Caching;
+using Core.Aspects.Autofac.Exception;
+using Core.Aspects.Autofac.Logging;
+using Core.Aspects.Autofac.Performance;
 using Core.Aspects.Autofac.Transaction;
 using Core.Aspects.Autofac.Validation;
+using Core.CrossCuttingConcerns.Logging.Log4Net.Loggers;
 using Core.CrossCuttingConcerns.Validation;
+using Core.Utilities.Business;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace Business.Concrete
 {
     public class ProductManager : IProductService
     {
         private IProductDal _productDal;
+        private ICategoryService _categoryService; 
+        // başka bir servis kullanmak istersek 
+        // dal değil service i çağırmak..!
 
-        public ProductManager(IProductDal productDal)
+        public ProductManager(IProductDal productDal, ICategoryService categoryService)
         {
             _productDal = productDal;
+            _categoryService = categoryService;
+
         }
 
         public IDataResult<Product> GetById(int productId)
@@ -30,11 +43,18 @@ namespace Business.Concrete
             return new SuccessDataResult<Product>(_productDal.Get(p => p.ProductId == productId));
         }
 
+        //[ExceptionLogAspect(typeof(FileLogger))]
+        [PerformanceAspect(5)]//5  saniyeyi geçerse bu işlem o zaman output a yazıcak
         public IDataResult<List<Product>> GetList()
         {
+            Thread.Sleep(5000);// 5 saniye bekle - output vermesi için yazdık
             return new SuccessDataResult<List<Product>>(_productDal.GetList().ToList());
         }
 
+        //[SecuredOperation("Product.List,Admin")]
+        //[ExceptionLogAspect(typeof(DatabaseLogger))]
+        //[LogAspect(typeof(DatabaseLogger))]
+        [LogAspect(typeof(FileLogger))]
         [CacheAspect(10)]//dakika
         public IDataResult<List<Product>> GetListByCategory(int categoryId)
         {
@@ -61,10 +81,46 @@ namespace Business.Concrete
             /////////// ÇEKME KODU///////// STEP2: STEP 1 DEN KURTULMAK İÇİN YAZILDI Business > Validation Rules > FluentValidation'da yazılıp çekme işlemi 
             //ValidationTool.Validate(new ProductValidator(), product);
 
+            // START bir ürün ismi sistemde mevcut ise bir daha girilemiyecek START     bunu buraya değilde CheckIfProductNameExists adında IResult oluşturuyoruz
 
+            //if (_productDal.Get(p=>p.ProductName==product.ProductName)!=null)
+            //{
+            //    return new ErrorResult(Messages.ProductNameAlreadyExists);
+            //}
+
+            // END bir ürün ismi sistemde mevcut ise bir daha girilemiyecek END
+
+            IResult result = BusinessRules.Run(CheckIfProductNameExists(product.ProductName)); // burada kuralları çekiyoruz CheckIfProductNameExists, CheckIfCategoryIsEnabled category uydurma bi kural yaptık biz kendimize göre ayarlıyabiliriz.
+            if (result != null)
+            {
+                return result;
+            }
 
             _productDal.Add(product);
             return new SuccessResult(Messages.ProductAdded);
+        }
+
+        private IResult CheckIfProductNameExists(string productName)
+        {
+
+            var result = _productDal.GetList(p => p.ProductName == productName).Any();
+            if (result)
+            {
+                return new ErrorResult(Messages.ProductNameAlreadyExists);
+            }
+
+            return new SuccessResult();
+        }
+
+        private IResult CheckIfCategoryIsEnabled()
+        {
+            var result = _categoryService.GetList();
+            if (result.Data.Count < 10) // uydurma biz istediğimize göre uyarlıyabiliriz.
+            {
+                return new ErrorResult(Messages.CheckIfCategoryIsEnabled);
+            }
+
+            return new SuccessResult();
         }
 
         public IResult Delete(Product product)

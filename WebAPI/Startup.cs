@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,10 +35,18 @@ namespace WebAPI
         {
             //services.AddMemoryCache();
             services.AddControllers();
+
+            // ENABLE CORS
             services.AddCors(options=> {
                 options.AddPolicy("AllowOrigin", 
-                    builder=>builder.WithOrigins("http://localhost:3000"));// Origin istek yapýlan yer demek. domainimiz ne ise onu yazýyoruz.
+                    builder=>builder.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowCredentials().AllowAnyMethod());// Origin istek yapýlan yer demek. domainimiz ne ise onu yazýyoruz.
             });
+
+            //JSON Serializer
+            services.AddControllersWithViews().AddNewtonsoftJson(options =>
+            options.SerializerSettings.ReferenceLoopHandling=Newtonsoft
+            .Json.ReferenceLoopHandling.Ignore)
+            .AddNewtonsoftJson();
 
             var tokenOptions = Configuration.GetSection("TokenOptions").Get<TokenOptions>();
 
@@ -68,7 +77,9 @@ namespace WebAPI
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseCors(builder => builder.WithOrigins("http://localhost:3000").AllowAnyHeader()); // buradan gelen türlü talebe cevap ver -> Header get post put delete gibi istekler bunlarýn hepsine izin ver
+            app.ConfigureCustomExceptionMiddleware();
+
+            app.UseCors(builder => builder.WithOrigins("http://localhost:4200").AllowCredentials().AllowAnyMethod().AllowAnyHeader()); // buradan gelen türlü talebe cevap ver -> Header get post put delete gibi istekler bunlarýn hepsine izin ver
             
             app.UseHttpsRedirection();
 
